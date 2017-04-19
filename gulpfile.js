@@ -27,7 +27,7 @@ gulp.task('inject', function(){
    var injectSrc = gulp.src(['./public/css/*.css','./public/js/*.js'],{ read: false});
    var injectOptions = {
        ignorePath: '/public'
-   }
+   };
    
    return gulp.src('./src/views/*.jade')
               .pipe(wiredep(options))
