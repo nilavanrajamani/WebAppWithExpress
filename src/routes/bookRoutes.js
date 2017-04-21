@@ -1,77 +1,67 @@
 var express = require("express");
 var bookRouter = express.Router();
+var mongodb = require('mongodb').MongoClient;
+//var sql = require('mssql');
+console.log('This page is executing');
+var objectId = require('mongodb').ObjectID;
 
-var books = [
-    {
-        title: 'War and Peace',
-        genre: 'Historical Fiction',
-        author: 'Lev Nikolayevich Tolstoy',
-        read: false
-    },
-    {
-        title: 'Les Misérables',
-        genre: 'Historical Fiction',
-        author: 'Victor Hugo',
-        read: false
-    },
-    {
-        title: 'The Time Machine',
-        genre: 'Science Fiction',
-        author: 'H. G. Wells',
-        read: false
-    },
-    {
-        title: 'A Journey into the Center of the Earth',
-        genre: 'Science Fiction',
-        author: 'Jules Verne',
-        read: false
-    },
-    {
-        title: 'The Dark World',
-        genre: 'Fantasy',
-        author: 'Henry Kuttner',
-        read: false
-    },
-    {
-        title: 'The Wind in the Willows',
-        genre: 'Fantasy',
-        author: 'Kenneth Grahame',
-        read: false
-    },
-    {
-        title: 'Life On The Mississippi',
-        genre: 'History',
-        author: 'Mark Twain',
-        read: false
-    },
-    {
-        title: 'Childhood',
-        genre: 'Biography',
-        author: 'Lev Nikolayevich Tolstoy',
-        read: false
-    }
-];
+var router = function (nav) {
+    bookRouter.route('/')
+        .get(function (req, res) {
+            // var request = new sql.Request();
 
-var router = function(nav){
-bookRouter.route('/')
-    .get(function (req, res) {
-        res.render('bookListView', {
-            nav: nav,
-            title: 'Hello from ejs',
-            books: books
+            // request.query('select * from Books',function(err, recordset){
+            //     console.log(recordset);
+            // });
+            var url = 'mongodb://localhost:27017/libraryApp';
+            mongodb.connect(url, function (err, db) {
+                var collection = db.collection('books');
+                collection.find({}).toArray(function (err, results) {
+                    //console.log(err);
+                    res.render('bookListView', {
+                        nav: nav,
+                        title: 'Hello from ejs',
+                        books: results
+                    });
+                });
+            });
         });
-    });
 
-bookRouter.route('/:id')
-    .get(function (req, res) {
-        var id= req.params.id;
-        res.render('bookView', {
-            nav: nav,
-            title: 'Hello from ejs',
-            book: books[id]
+    bookRouter.route('/:id')
+        // .all(function (req, res, next) {
+        //     var id = req.params.id;
+        //     var ps = new sql.PreparedStatement();
+        //     ps.input('Id', sql.Int);
+        //     ps.prepare('select * from books where id=@id', function (err) {
+        //         ps.execute({
+        //             id: req.params.id
+        //         }, function (err, recordset) {
+        //             if (recordset.length === 0) {
+        //                 res.status(404).send('Not found');
+        //             }
+        //             else {
+        //                 req.book = recordset[0];
+        //                 next();
+        //             }
+        //         });
+        //     });
+        // })
+        .get(function (req, res) {
+            var id = new objectId(req.params.id);
+            var url = 'mongodb://localhost:27017/libraryApp';
+            mongodb.connect(url, function (err, db) {
+                var collection = db.collection('books');
+                collection.findOne({_id: id}, function (err, results) {
+                    //console.log(err);
+                    res.render('bookView', {
+                        nav: nav,
+                        title: 'Hello from ejs',
+                        book: results
+                    });
+                });
+            });
         });
-    });
-    return router;
+    return bookRouter;
 };
 
-module.exports = bookRouter;
+module.exports = router;
